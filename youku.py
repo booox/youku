@@ -1,11 +1,14 @@
-#-*- coding:utf-8 -*-
+# -*- coding:utf-8 -*-
 from __future__ import unicode_literals
+
+from functools import partial
+from multiprocessing import Pool
 
 
 def get_youku_stats(url, timeout=30):
-
     def download():
         from ghost import Ghost
+
         ghost = Ghost(wait_timeout=timeout, download_images=False, display=False)
         ghost.open(url)
         ghost.click(b'#fn_stat')
@@ -16,6 +19,7 @@ def get_youku_stats(url, timeout=30):
     def get_stats(html):
         import re
         from bs4 import BeautifulSoup
+
         soup = BeautifulSoup(html)
 
         def get_one_stat(key, search_text):
@@ -40,9 +44,29 @@ def get_youku_stats(url, timeout=30):
     return get_stats(download())
 
 
-print get_youku_stats("http://v.youku.com/v_show/id_XODcxOTQ4MTk2.html")
-print get_youku_stats("http://v.youku.com/v_show/id_XODcyMjA1NTky.html")
-print get_youku_stats("http://v.youku.com/v_show/id_XNzcyMTExMTcy.html")
-print get_youku_stats("http://v.youku.com/v_show/id_XODcxNzYxMTUy.html")
-print get_youku_stats("http://v.youku.com/v_show/id_XODI5NzUwODgw.html")
+def get_one_youku_stats(url, timeout):
+    try:
+        return get_youku_stats(url, timeout=timeout)
+    except Exception as err:
+        return None
+
+
+def get_multi_youku_stats(urls, timeout=30):
+    func = partial(get_one_youku_stats, timeout=timeout)
+    return pool.imap(func, urls)
+
+
+pool = Pool(10)
+
+
+if __name__ == "__main__":
+    urls = ["http://v.youku.com/v_show/id_XODcxOTQ4MTk2.html",
+            "http://v.youku.com/v_show/id_XODcyMjA1NTky.html",
+            "http://v.youku.com/v_show/id_XNzcyMTExMTcy.html",
+            "http://v.youku.com/v_show/id_XODcxNzYxMTUy.html",
+            "http://v.youku.com/v_show/id_XODI5NzUwODgw.html"]
+    for url, stats in zip(urls, get_multi_youku_stats(urls)):
+        print url, stats
+
+
 
