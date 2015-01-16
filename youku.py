@@ -12,7 +12,6 @@ def get_youku_stats(url, timeout=30):
         ghost = Ghost(wait_timeout=timeout, download_images=False, display=False)
         ghost.open(url)
         ghost.click(b'#fn_stat')
-        ghost.wait_for_text("本集数据")
         ghost.wait_for_text("总播放数:")
         return ghost.content
 
